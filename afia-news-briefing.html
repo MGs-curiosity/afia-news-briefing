@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AFIA 모닝 브리핑</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;600;700&family=DM+Mono:wght@400;500&family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d0d0d; --surface: #161616; --border: #2a2a2a;
+    --accent: #c8a96e; --accent2: #e8c98e; --text: #e8e4dc;
+    --muted: #888; --danger: #e05252; --green: #52c07a;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: 'Noto Serif KR', serif; min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 40px 20px 80px; }
+  .header { width: 100%; max-width: 780px; margin-bottom: 40px; }
+  .rule { width: 100%; height: 1px; background: linear-gradient(90deg, transparent, var(--accent), transparent); }
+  .header-top { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; padding: 24px 0; }
+  .brand-sub { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.3em; color: var(--accent); text-transform: uppercase; margin-bottom: 6px; }
+  .brand-name { font-family: 'Playfair Display', serif; font-size: 42px; font-weight: 900; color: var(--accent2); line-height: 1; letter-spacing: -1px; }
+  .brand-desc { font-size: 12px; color: var(--muted); margin-top: 6px; letter-spacing: 0.05em; }
+  .date-badge { font-family: 'DM Mono', monospace; font-size: 12px; color: var(--muted); text-align: right; line-height: 1.6; }
+
+  .api-section { width: 100%; max-width: 780px; background: var(--surface); border: 1px solid var(--border); border-left: 3px solid var(--accent); padding: 20px 24px; margin-bottom: 28px; }
+  .api-label { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.3em; color: var(--accent); text-transform: uppercase; margin-bottom: 10px; }
+  .api-row { display: flex; gap: 10px; align-items: center; }
+  .api-input { flex: 1; background: #0d0d0d; border: 1px solid var(--border); color: var(--text); font-family: 'DM Mono', monospace; font-size: 12px; padding: 10px 14px; outline: none; transition: border-color 0.2s; }
+  .api-input:focus { border-color: var(--accent); }
+  .api-input::placeholder { color: #444; }
+  .api-save { padding: 10px 18px; background: var(--accent); color: #0d0d0d; border: none; font-family: 'DM Mono', monospace; font-size: 11px; font-weight: 500; letter-spacing: 0.1em; cursor: pointer; transition: all 0.2s; white-space: nowrap; }
+  .api-save:hover { background: var(--accent2); }
+  .api-status { font-family: 'DM Mono', monospace; font-size: 11px; margin-top: 8px; color: var(--muted); }
+  .api-status.ok { color: var(--green); }
+  .api-status.err { color: var(--danger); }
+  .api-hint { font-family: 'DM Mono', monospace; font-size: 10px; color: #555; margin-top: 8px; }
+  .api-hint a { color: var(--accent); text-decoration: none; }
+
+  .btn-row { width: 100%; max-width: 780px; display: flex; gap: 12px; margin-bottom: 20px; }
+  .btn-generate { flex: 1; padding: 18px; background: var(--accent); color: #0d0d0d; border: none; font-family: 'Playfair Display', serif; font-size: 16px; font-weight: 700; letter-spacing: 0.05em; cursor: pointer; transition: all 0.2s; }
+  .btn-generate:hover:not(:disabled) { background: var(--accent2); transform: translateY(-1px); }
+  .btn-generate:disabled { opacity: 0.5; cursor: not-allowed; }
+  .btn-indicators { flex: 1; padding: 18px; background: transparent; color: var(--accent); border: 1px solid var(--accent); font-family: 'Playfair Display', serif; font-size: 16px; font-weight: 700; letter-spacing: 0.05em; cursor: pointer; transition: all 0.2s; }
+  .btn-indicators:hover:not(:disabled) { background: rgba(200,169,110,0.1); transform: translateY(-1px); }
+  .btn-indicators:disabled { opacity: 0.5; cursor: not-allowed; }
+  .btn-inner { display: flex; align-items: center; justify-content: center; gap: 10px; }
+  .spinner { width: 18px; height: 18px; border: 2px solid rgba(0,0,0,0.2); border-top-color: #0d0d0d; border-radius: 50%; animation: spin 0.7s linear infinite; display: none; }
+  .spinner2 { width: 18px; height: 18px; border: 2px solid rgba(200,169,110,0.2); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.7s linear infinite; display: none; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .status-msg { width: 100%; max-width: 780px; font-family: 'DM Mono', monospace; font-size: 12px; color: var(--accent); text-align: center; margin-bottom: 20px; display: none; letter-spacing: 0.1em; }
+  @keyframes blink { 50% { opacity: 0; } }
+
+  .output-wrap { width: 100%; max-width: 780px; display: none; flex-direction: column; animation: fadeUp 0.5s ease; margin-bottom: 32px; }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+  .output-label { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.3em; color: var(--accent); text-transform: uppercase; margin-bottom: 12px; }
+  .preview-card { background: var(--surface); border: 1px solid var(--border); border-left: 3px solid var(--accent); padding: 28px 32px; margin-bottom: 16px; position: relative; }
+  .preview-card pre { font-family: 'Noto Serif KR', serif; font-size: 13.5px; line-height: 2.1; white-space: pre-wrap; word-break: break-word; color: var(--text); }
+  .deco-corner { position: absolute; bottom: 8px; right: 12px; font-family: 'DM Mono', monospace; font-size: 9px; color: #333; letter-spacing: 0.2em; }
+  .btn-copy { width: 100%; padding: 14px; background: transparent; border: 1px solid var(--accent); color: var(--accent); font-family: 'DM Mono', monospace; font-size: 13px; letter-spacing: 0.15em; cursor: pointer; transition: all 0.2s; text-transform: uppercase; margin-bottom: 12px; }
+  .btn-copy:hover { background: rgba(200,169,110,0.08); }
+  .btn-copy.copied { border-color: var(--green); color: var(--green); }
+  .btn-regen { width: 100%; padding: 12px; background: transparent; border: 1px solid var(--border); color: var(--muted); font-family: 'DM Mono', monospace; font-size: 12px; letter-spacing: 0.1em; cursor: pointer; transition: all 0.2s; text-transform: uppercase; }
+  .btn-regen:hover { border-color: var(--muted); color: var(--text); }
+  .error-box { padding: 16px 20px; border: 1px solid var(--danger); background: rgba(224,82,82,0.06); color: var(--danger); font-family: 'DM Mono', monospace; font-size: 12px; display: none; margin-bottom: 16px; line-height: 1.8; white-space: pre-wrap; }
+  .footer { margin-top: 60px; font-family: 'DM Mono', monospace; font-size: 10px; color: #444; letter-spacing: 0.2em; text-align: center; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="rule"></div>
+  <div class="header-top">
+    <div class="brand">
+      <div class="brand-sub">아주대학교 가치투자소학회</div>
+      <div class="brand-name">AFIA</div>
+      <div class="brand-desc">모닝 마켓 브리핑 — Morning Market Briefing</div>
+    </div>
+    <div class="date-badge" id="dateBadge"></div>
+  </div>
+  <div class="rule"></div>
+</div>
+
+<div class="api-section">
+  <div class="api-label">🔑 Gemini API Key</div>
+  <div class="api-row">
+    <input class="api-input" id="apiKeyInput" type="password" placeholder="AIza... (Google AI Studio에서 발급)">
+    <button class="api-save" onclick="saveKey()">저장</button>
+  </div>
+  <div class="api-status" id="apiStatus">키를 입력하고 저장하세요</div>
+  <div class="api-hint">🔗 <a href="https://aistudio.google.com/app/apikey" target="_blank">aistudio.google.com</a> → Get API Key</div>
+</div>
+
+<div class="btn-row">
+  <button class="btn-generate" id="btnGenerate" onclick="generate()">
+    <div class="btn-inner">
+      <div class="spinner" id="spinner"></div>
+      <span id="btnText">📰 모닝 뉴스 브리핑</span>
+    </div>
+  </button>
+  <button class="btn-indicators" id="btnIndicators" onclick="generateIndicators()">
+    <div class="btn-inner">
+      <div class="spinner2" id="spinner2"></div>
+      <span id="btnText2">📊 경제지표 확인</span>
+    </div>
+  </button>
+</div>
+
+<div class="status-msg" id="statusMsg"></div>
+
+<div class="output-wrap" id="outputWrap">
+  <div class="output-label">카카오톡 복붙용 브리핑</div>
+  <div class="error-box" id="errorBox"></div>
+  <div class="preview-card">
+    <pre id="outputPre"></pre>
+    <span class="deco-corner">AFIA BRIEFING</span>
+  </div>
+  <button class="btn-copy" id="btnCopy" onclick="copyText()">📋 카카오톡에 복사하기</button>
+  <button class="btn-regen" onclick="generate()">↺ 브리핑 다시 생성</button>
+</div>
+
+<div class="output-wrap" id="indicatorsWrap">
+  <div class="output-label">주요 경제지표</div>
+  <div class="error-box" id="errorBox2"></div>
+  <div class="preview-card">
+    <pre id="indicatorsPre"></pre>
+    <span class="deco-corner">AFIA INDICATORS</span>
+  </div>
+  <button class="btn-copy" id="btnCopy2" onclick="copyText2()">📋 카카오톡에 복사하기</button>
+  <button class="btn-regen" onclick="generateIndicators()">↺ 지표 다시 불러오기</button>
+</div>
+
+<div class="footer">AFIA · AJOU UNIVERSITY · VALUE INVESTING CLUB · <span id="yearFooter"></span></div>
+
+<script>
+const now = new Date();
+const days = ['일','월','화','수','목','금','토'];
+const day = now.getDay();
+let briefingDate = new Date(now);
+if (day === 0) briefingDate.setDate(now.getDate() - 2);
+if (day === 6) briefingDate.setDate(now.getDate() - 1);
+const dateStr = briefingDate.getFullYear()+'년 '+(briefingDate.getMonth()+1)+'월 '+briefingDate.getDate()+'일 ('+days[briefingDate.getDay()]+')';
+document.getElementById('dateBadge').innerHTML = dateStr+'<br>KST '+String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0');
+document.getElementById('yearFooter').textContent = now.getFullYear();
+
+const KEY_STORAGE = 'afia_gemini_key';
+function saveKey() {
+  const val = document.getElementById('apiKeyInput').value.trim();
+  if (!val) { setStatus('키를 입력해주세요', 'err'); return; }
+  if (!val.startsWith('AIza')) { setStatus('올바른 키가 아닌 것 같아요 (AIza...로 시작)', 'err'); return; }
+  localStorage.setItem(KEY_STORAGE, val);
+  setStatus('✅ 저장 완료!', 'ok');
+}
+function getKey() { return localStorage.getItem(KEY_STORAGE) || ''; }
+function setStatus(msg, type) {
+  const el = document.getElementById('apiStatus');
+  el.textContent = msg;
+  el.className = 'api-status' + (type ? ' '+type : '');
+}
+window.addEventListener('load', () => {
+  const saved = getKey();
+  if (saved) { document.getElementById('apiKeyInput').value = saved; setStatus('✅ 저장된 키 불러옴', 'ok'); }
+});
+
+// ── 공통 Gemini 호출 함수 ──────────────────────────────────────
+async function callGemini(apiKey, prompt, temp = 0.2) {
+  const res = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: prompt }] }],
+        tools: [{ google_search: {} }],
+        generationConfig: { temperature: temp, maxOutputTokens: 8192 }
+      })
+    }
+  );
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error?.message || 'API 오류 '+res.status);
+  const candidate = data.candidates?.[0];
+  if (!candidate) throw new Error('응답이 비어있어요.');
+  return candidate.content?.parts?.filter(p => p.text)?.map(p => p.text)?.join('') || '';
+}
+
+// ── 모닝 브리핑 ───────────────────────────────────────────────
+let fullText = '';
+async function generate() {
+  const apiKey = getKey();
+  if (!apiKey) { alert('먼저 Gemini API 키를 입력하고 저장해주세요!'); return; }
+
+  const btn = document.getElementById('btnGenerate');
+  const spinner = document.getElementById('spinner');
+  const btnText = document.getElementById('btnText');
+  const outputWrap = document.getElementById('outputWrap');
+  const outputPre = document.getElementById('outputPre');
+  const errorBox = document.getElementById('errorBox');
+  const statusMsg = document.getElementById('statusMsg');
+
+  btn.disabled = true; spinner.style.display = 'block'; btnText.textContent = '생성 중...';
+  statusMsg.style.display = 'block'; outputWrap.style.display = 'none'; errorBox.style.display = 'none';
+  fullText = '';
+
+  try {
+    statusMsg.textContent = '🇰🇷 국내 뉴스 검색 중...';
+    const domestic = await callGemini(apiKey,
+      `${dateStr} 기준으로 한국 언론사들의 주요 경제or금융or증권시장 뉴스를 검색해서 7개 이상 작성해줘. 헤드라인 1문장과 요약 1문장. 당일 기사 우선, 없으면 가장 최근 기사. 마크다운 금지. URL은 반드시 언론사 원본 도메인 링크만. vertexaisearch나 grounding-api-redirect 링크 절대 금지. 최소 7개.
+
+🇰🇷 국내 경제·금융 뉴스
+① [제목]
+   [요약]
+   🔗 URL
+② [제목]
+   [요약]
+   🔗 URL
+③ [제목]
+   [요약]
+   🔗 URL
+④ [제목]
+   [요약]
+   🔗 URL
+⑤ [제목]
+   [요약]
+   🔗 URL
+⑥ [제목]
+   [요약]
+   🔗 URL
+⑦ [제목]
+    [요약]
+   🔗 URL`
+    );
+
+    statusMsg.textContent = '🌐 해외 뉴스 검색 중...';
+    const global = await callGemini(apiKey,
+      `${dateStr} 기준으로 해외언론사(야후파이낸스, 블룸버그, 로이터, 파이낸셜타임즈 등)의 주요 경제or금융or증권시장 뉴스를 검색해서 7개 이상 작성해줘. 미국, 중국, 일본 이슈 우선. 금리와 경제지표 관련 뉴스 반드시 포함. 당일 기사 우선, 없으면 가장 최근 기사. 마크다운 금지. URL은 반드시 언론사 원본 도메인 링크만. vertexaisearch나 grounding-api-redirect 링크 절대 금지. 최소 7개.
+
+🌐 해외 경제·금융 뉴스 (Bloomberg / Reuters / FT)
+① [출처] 영어 원제 — 한국어 한 줄 요약
+   🔗 URL
+② [출처] 영어 원제 — 한국어 한 줄 요약
+   🔗 URL
+③ [출처] 영어 원제 — 한국어 한 줄 요약
+   🔗 URL
+④ [출처] 영어 원제 — 한국어 한 줄 요약
+   🔗 URL
+⑤ [출처] 영어 원제 — 한국어 한 줄 요약
+   🔗 URL
+⑥ [출처] 영어 원제 — 한국어 한 줄 요약
+   🔗 URL
+⑦ [출처] 영어 원제 — 한국어 한 줄 요약
+   🔗 URL`
+    );
+
+    statusMsg.textContent = '📌 핵심 포인트 정리 중...';
+    const summary = await callGemini(apiKey,
+      `아래 뉴스들을 바탕으로 오늘의 핵심 포인트 3줄과, 높은 변동성에 노출될 가능성이 있는 산업 3개를 이유와 함께 작성해줘. 마크다운 금지.
+
+${domestic}
+
+${global}
+
+형식:
+📌 오늘의 핵심 포인트
+- 핵심 1
+- 핵심 2
+- 핵심 3
+
+⚡ 변동성 주의 산업
+- 산업 1 — 이유 한 줄
+- 산업 2 — 이유 한 줄
+- 산업 3 — 이유 한 줄`
+    );
+
+    fullText = `📰 AFIA 모닝 브리핑 — ${dateStr}\n\n${domestic.trim()}\n\n${global.trim()}\n\n${summary.trim()}\n\n— AFIA 아주대 가치투자소학회`;
+    fullText = fullText.replace(/\*\*/g,'').replace(/#{1,6} /g,'').replace(/^\* /gm,'• ');
+    outputPre.textContent = fullText;
+    outputWrap.style.display = 'flex';
+
+  } catch(err) {
+    outputWrap.style.display = 'flex';
+    errorBox.textContent = '⚠️ 오류: ' + err.message;
+    errorBox.style.display = 'block';
+  } finally {
+    btn.disabled = false; spinner.style.display = 'none'; btnText.textContent = '📰 모닝 뉴스 브리핑';
+    statusMsg.style.display = 'none';
+  }
+}
+
+// ── 경제지표 ─────────────────────────────────────────────────
+let indicatorsText = '';
+async function generateIndicators() {
+  const apiKey = getKey();
+  if (!apiKey) { alert('먼저 Gemini API 키를 입력하고 저장해주세요!'); return; }
+
+  const btn = document.getElementById('btnIndicators');
+  const spinner2 = document.getElementById('spinner2');
+  const btnText2 = document.getElementById('btnText2');
+  const indicatorsWrap = document.getElementById('indicatorsWrap');
+  const indicatorsPre = document.getElementById('indicatorsPre');
+  const errorBox2 = document.getElementById('errorBox2');
+  const statusMsg = document.getElementById('statusMsg');
+
+  btn.disabled = true; spinner2.style.display = 'block'; btnText2.textContent = '불러오는 중...';
+  statusMsg.style.display = 'block'; indicatorsWrap.style.display = 'none'; errorBox2.style.display = 'none';
+  indicatorsText = '';
+
+  try {
+    statusMsg.textContent = '💱 환율 · 금 시세 검색 중...';
+    const fx = await callGemini(apiKey,
+      `오늘(${dateStr}) 기준 최신 환율과 금 시세를 검색해서 아래 형식으로 정리해줘. 마크다운 금지. 반드시 검색해서 실제 수치 채울 것. "정보없음" 절대 금지.
+
+💱 환율 (원 기준)
+• 원/달러: X,XXX.XX원 (전일 대비 ±X.XX%)
+• 원/엔 (100엔): XXX.XX원 (전일 대비 ±X.XX%)
+• 원/위안: XXX.XX원 (전일 대비 ±X.XX%)
+• 원/유로: X,XXX.XX원 (전일 대비 ±X.XX%)
+
+🥇 금 시세
+• 금 현물: X,XXX.XX달러/온스 (전일 대비 ±X.XX%)`, 0.1
+    );
+
+    statusMsg.textContent = '📈 증시 · 유가 · 금리 검색 중...';
+    const markets = await callGemini(apiKey,
+      `오늘(${dateStr}) 기준 최신 주요 증시지수, 유가, 각국 기준금리를 검색해서 아래 형식으로 정리해줘. 마크다운 금지. 반드시 검색해서 실제 수치 채울 것. "정보없음" 절대 금지.
+
+📈 주요 증시 지수
+• 코스피: X,XXX.XX (전일 대비 ±X.XX%)
+• 코스닥: XXX.XX (전일 대비 ±X.XX%)
+• 니케이225: XX,XXX.XX (전일 대비 ±X.XX%)
+• 상해종합: X,XXX.XX (전일 대비 ±X.XX%)
+• S&P500: X,XXX.XX (전일 대비 ±X.XX%)
+• 나스닥: XX,XXX.XX (전일 대비 ±X.XX%)
+
+🛢 유가
+• WTI: XX.XX달러/배럴 (전일 대비 ±X.XX%)
+• 브렌트: XX.XX달러/배럴 (전일 대비 ±X.XX%)
+
+🏦 기준금리
+• 한국: X.XX%
+• 미국: X.XX% ~ X.XX%
+• 유럽(ECB): X.XX%
+• 일본: X.XX%
+• 중국: X.XX%`, 0.1
+    );
+
+    statusMsg.textContent = '📅 경제지표 일정 검색 중...';
+    const calendar = await callGemini(apiKey,
+      `${dateStr} 기준으로 앞으로 일주일 내 발표될 주요 경제지표 일정을 검색해서 정리해줘. 미국, 한국, 중국, 일본, 유럽 위주. 마크다운 금지. 반드시 실제 일정 검색해서 채울 것.
+
+📅 이번 주 주요 경제지표 발표 일정
+• MM/DD (요일) — [국가] 지표명 (예상치 있으면 포함)
+• MM/DD (요일) — [국가] 지표명
+• MM/DD (요일) — [국가] 지표명`, 0.1
+    );
+
+    indicatorsText = `📊 AFIA 주요 경제지표 — ${dateStr}\n\n${fx.trim()}\n\n${markets.trim()}\n\n${calendar.trim()}\n\n— AFIA 아주대 가치투자소학회`;
+    indicatorsText = indicatorsText.replace(/\*\*/g,'').replace(/#{1,6} /g,'');
+    indicatorsPre.textContent = indicatorsText;
+    indicatorsWrap.style.display = 'flex';
+
+  } catch(err) {
+    indicatorsWrap.style.display = 'flex';
+    errorBox2.textContent = '⚠️ 오류: ' + err.message;
+    errorBox2.style.display = 'block';
+  } finally {
+    btn.disabled = false; spinner2.style.display = 'none'; btnText2.textContent = '📊 경제지표 확인';
+    statusMsg.style.display = 'none';
+  }
+}
+
+// ── 복사 ─────────────────────────────────────────────────────
+async function copyText() {
+  if (!fullText) return;
+  const btn = document.getElementById('btnCopy');
+  try { await navigator.clipboard.writeText(fullText); }
+  catch { const ta = document.createElement('textarea'); ta.value = fullText; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); }
+  btn.textContent = '✅ 복사 완료!'; btn.classList.add('copied');
+  setTimeout(() => { btn.textContent = '📋 카카오톡에 복사하기'; btn.classList.remove('copied'); }, 2500);
+}
+
+async function copyText2() {
+  if (!indicatorsText) return;
+  const btn = document.getElementById('btnCopy2');
+  try { await navigator.clipboard.writeText(indicatorsText); }
+  catch { const ta = document.createElement('textarea'); ta.value = indicatorsText; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); }
+  btn.textContent = '✅ 복사 완료!'; btn.classList.add('copied');
+  setTimeout(() => { btn.textContent = '📋 카카오톡에 복사하기'; btn.classList.remove('copied'); }, 2500);
+}
+</script>
+</body>
+</html>
